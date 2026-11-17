@@ -9,12 +9,13 @@ import { BONO_TEXTO, momento } from './game/oakhaven.js';
 import Aldea from './components/Aldea.jsx';
 import NavBar from './components/NavBar.jsx';
 import Onboarding from './screens/Onboarding.jsx';
+import Rutina from './screens/Rutina.jsx';
 
 const btn = 'h-12 px-4 border-4 border-black bg-gold text-space font-pixel text-[10px] shadow-[0_4px_0_#090614] active:translate-y-[3px] active:shadow-none';
 const FLAMA = ['...X....', '..XX....', '..XXX...', '.XXXX...', '.XXXXX..', 'XXXXXXX.', 'XXXXXXX.', '.XXXXX..'];
 
 const Barra = ({ label, v, color }) => (
-  <div><div className="flex justify-between text-lg"><span>{label}</span><span className="font-pixel text-[10px]">{v}</span></div>
+  <div><div className="flex justify-between text-lg"><span>{label}</span><span className="font-pixel text-[10px]">{Math.round(v)}</span></div>
     <div className="h-4 border-2 border-black bg-[#3b2a66]"><div style={{ width: `${Math.min(100, v)}%`, background: color }} className="h-full" /></div></div>
 );
 
@@ -99,7 +100,7 @@ export default function App() {
           </div>
           <button className={btn + ' bg-[#3b2a66] text-[#f8f1d8]'} onClick={run(logout)}>SALIR</button>
         </>)}
-        {tab === 'rutina' && <Pronto titulo="RUTINA" texto="El registro de series, el temporizador y el combate contra el jefe llegan en el siguiente paso." />}
+        {tab === 'rutina' && <Rutina uid={user.uid} perfil={perfil} />}
         {tab === 'cronicas' && <Pronto titulo="CRÓNICAS" texto="El mapa de capítulos y el bestiario llegan con los jefes." />}
         {tab === 'ranking' && <Pronto titulo="RANKING" texto="Tu liga semanal llega más adelante." />}
         {err && <p role="alert" className="text-crimson text-sm">Error: {err}</p>}

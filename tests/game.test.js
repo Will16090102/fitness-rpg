@@ -46,3 +46,20 @@ test('Velo de Ceniza y momento del día', () => {
   assert.equal(velo({ ultimoEntreno: '2026-11-10', elixires: 1 }, '2026-11-16'), false);
   assert.deepEqual([momento(7), momento(15), momento(22), momento(1)], ['alba', 'dia', 'noche', 'noche']);
 });
+
+import { EJERCICIOS } from '../src/data/ejercicios.js';
+import { nuevoJefe, jefeInfo } from '../src/game/jefes.js';
+test('la debilidad del jefe suma 15%', () => {
+  const a = danoFinal({ peso: 100, reps: 5, clase: 'mago' });
+  const b = danoFinal({ peso: 100, reps: 5, clase: 'mago', debilidad: true });
+  assert.ok(Math.abs(b - a * 1.15) <= 1);
+});
+test('catálogo: 40+ ejercicios y toda categoría tiene opción sin equipo', () => {
+  assert.ok(EJERCICIOS.length >= 40);
+  for (const c of new Set(EJERCICIOS.map((e) => e.cat))) assert.ok(EJERCICIOS.some((e) => e.cat === c && e.equipo === 'peso_corporal'), c);
+});
+test('el HP del jefe escala con días y capítulo', () => {
+  const a = nuevoJefe({ dias: ['L', 'X', 'V'] }, 1), b = nuevoJefe({ dias: ['L', 'X', 'V', 'S'] }, 1), c = nuevoJefe({ dias: ['L', 'X', 'V'] }, 2);
+  assert.ok(b.hp > a.hp && c.hp > a.hp && a.hp === a.hpMax);
+  assert.equal(jefeInfo(99).cap, 4);
+});
