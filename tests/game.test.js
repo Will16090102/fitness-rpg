@@ -81,7 +81,7 @@ test('con historial carga la última marca', () => {
   assert.deepEqual(valoresIniciales(e, { ultimos: { [e.id]: { peso: 80, reps: 6 } } }), { peso: 80, reps: 6 });
 });
 test('la rutina del día tiene 4 a 5 ejercicios distintos', () => {
-  const s = armarSesion(MOVIMIENTOS.filter((m) => m.cat === 'Pierna'), ['mancuernas']);
+  const s = armarSesion('Pierna', ['mancuernas']);
   assert.ok(s.length >= 4 && s.length <= 5 && new Set(s.map((i) => i.id)).size === s.length);
   assert.equal(SERIES, 4);
 });
@@ -100,8 +100,30 @@ test('cada ejercicio cambia según el equipo del usuario', () => {
   assert.deepEqual(disponibles(['mancuernas']), ['mancuernas', 'peso_corporal']);
 });
 test('la rutina rota cada día y usa tu equipo', () => {
-  const movs = MOVIMIENTOS.filter((m) => m.cat === 'Pierna');
-  const a = armarSesion(movs, ['mancuernas'], new Date(2026, 10, 17)), b = armarSesion(movs, ['mancuernas'], new Date(2026, 10, 18));
+  const a = armarSesion('Pierna', ['mancuernas'], new Date(2026, 10, 17)), b = armarSesion('Pierna', ['mancuernas'], new Date(2026, 10, 18));
   assert.notEqual(a[0].id, b[0].id);
   assert.ok(a.every((i) => ['mancuernas', 'peso_corporal'].includes(i.eq)));
+});
+
+import { PATRONES, SLOTS, movsDe } from '../src/data/patrones.js';
+test('todos los patrones resuelven movimientos y cada categoría tiene 5 slots', () => {
+  for (const p of Object.keys(PATRONES)) assert.equal(movsDe(p).length, PATRONES[p].length, p);
+  for (const [c, s] of Object.entries(SLOTS)) assert.equal(s.length, 5, c);
+});
+test('ninguna sesión repite movimiento, en ninguna categoría ni día', () => {
+  for (const c of Object.keys(SLOTS)) for (let d = 0; d < 12; d++) {
+    const s = armarSesion(c, ['gimnasio', 'mancuernas'], new Date(2026, 10, 1 + d));
+    assert.equal(new Set(s.map((i) => i.id)).size, 5, `${c} día ${d}`);
+  }
+});
+test('Full body: cuádriceps, bisagra, empuje, tracción y metabólico', () => {
+  const s = armarSesion('Full body', ['gimnasio', 'multifuncional', 'mancuernas']);
+  const en = (i, patron) => movsDe(patron).some((m) => m.id === s[i].id);
+  assert.ok(en(0, 'cuadriceps_fb') && en(1, 'bisagra_fb') && en(2, 'empuje') && en(3, 'traccion') && en(4, 'metabolico'));
+});
+test('con varias herramientas: carga al inicio y dinámico al final', () => {
+  const s = armarSesion('Full body', ['gimnasio', 'multifuncional', 'mancuernas']);
+  assert.equal(s[0].eq, 'gimnasio');
+  assert.equal(s[4].eq, 'peso_corporal');
+  assert.equal(armarSesion('Full body', ['mancuernas'])[0].eq, 'mancuernas');
 });
