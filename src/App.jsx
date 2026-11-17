@@ -10,6 +10,7 @@ import Aldea from './components/Aldea.jsx';
 import NavBar from './components/NavBar.jsx';
 import Onboarding from './screens/Onboarding.jsx';
 import Rutina from './screens/Rutina.jsx';
+import Armeria from './screens/Armeria.jsx';
 
 const btn = 'h-12 px-4 border-4 border-black bg-gold text-space font-pixel text-[10px] shadow-[0_4px_0_#090614] active:translate-y-[3px] active:shadow-none';
 const FLAMA = ['...X....', '..XX....', '..XXX...', '.XXXX...', '.XXXXX..', 'XXXXXXX.', 'XXXXXXX.', '.XXXXX..'];
@@ -46,6 +47,7 @@ export default function App() {
   const [user, setUser] = useState(undefined);
   const [perfil, setPerfil] = useState(undefined);
   const [tab, setTab] = useState('avatar');
+  const [vista, setVista] = useState(null);
   const [err, setErr] = useState('');
   useEffect(() => watchUser(setUser), []);
   useEffect(() => {
@@ -85,7 +87,8 @@ export default function App() {
           <span className="text-[#c9bee8]">{perfil.nombre}</span>
           <Llama racha={perfil.racha || 0} />
         </div>
-        {tab === 'avatar' && (<>
+        {tab === 'avatar' && vista === 'armeria' && <Armeria uid={user.uid} perfil={perfil} onVolver={() => setVista(null)} />}
+        {tab === 'avatar' && vista !== 'armeria' && (<>
           <Aldea perfil={perfil} velo={velo} />
           <p className="text-sm text-[#c9bee8]">{BONO_TEXTO[momento(new Date().getHours())]}</p>
           <div className="flex items-center justify-between">
@@ -98,6 +101,7 @@ export default function App() {
             <Barra label="Resistencia" v={a.resistencia ?? 0} color="#10b981" />
             <Barra label="Velocidad" v={a.velocidad ?? 0} color="#3b82f6" />
           </div>
+          <button className={btn} onClick={() => setVista('armeria')}>ARMERÍA</button>
           <button className={btn + ' bg-[#3b2a66] text-[#f8f1d8]'} onClick={run(logout)}>SALIR</button>
         </>)}
         {tab === 'rutina' && <Rutina uid={user.uid} perfil={perfil} />}

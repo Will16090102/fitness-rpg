@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import Avatar from './Avatar.jsx';
+import { aspecto } from '../data/armeria.js';
 import JefeSprite from './JefeSprite.jsx';
 
 const DIR = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
@@ -25,7 +26,7 @@ export default function GolpeOverlay({ anim, perfil, cap, golpe }) {
         </div>
       </div>
       <div className="relative w-full max-w-[430px] flex items-end justify-between px-6">
-        <motion.div initial={{ x: 0, y: 0, rotate: 0 }} animate={h} transition={{ duration: 0.8, times }}><Avatar clase={perfil.clase} tinte={perfil.tinte} escala={8} /></motion.div>
+        <motion.div initial={{ x: 0, y: 0, rotate: 0 }} animate={h} transition={{ duration: 0.8, times }}><Avatar clase={perfil.clase} tinte={perfil.tinte} escala={8} {...aspecto(perfil)} /></motion.div>
         <motion.div animate={{ x: [0, 0, 24, 0] }} transition={{ duration: 0.6, times: [0, 0.55, 0.7, 1] }}><JefeSprite cap={cap} golpe={golpe} escala={9} /></motion.div>
         <svg width="80" height="80" viewBox="-40 -40 80 80" shapeRendering="crispEdges" className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
           {DIR.map(([dx, dy], i) => (

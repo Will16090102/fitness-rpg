@@ -127,3 +127,21 @@ test('con varias herramientas: carga al inicio y dinámico al final', () => {
   assert.equal(s[4].eq, 'peso_corporal');
   assert.equal(armarSesion('Full body', ['mancuernas'])[0].eq, 'mancuernas');
 });
+
+import { ITEMS, INVENTARIO_INICIAL, tirarBotin, aspecto, porId } from '../src/data/armeria.js';
+test('Armería: ids únicos, piezas iniciales y apariencia equipada', () => {
+  assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length);
+  assert.ok(INVENTARIO_INICIAL.every((id) => porId(id)));
+  assert.deepEqual(aspecto({ equipado: { pechera: 'pechera-3', aura: 'aura-4' } }), { tintes: { pechera: '#4a6cf0' }, aura: '#f97316' });
+  assert.deepEqual(aspecto({}), { tintes: {} });
+});
+test('Cofre: con suerte máxima cae un Mítico; sin suerte no cae pieza', () => {
+  assert.equal(tirarBotin(INVENTARIO_INICIAL, () => 0).tier, 5);
+  assert.equal(tirarBotin(INVENTARIO_INICIAL, () => 0.99), null);
+});
+test('Cofre: no repite piezas que ya tienes', () => {
+  const todo = ITEMS.map((i) => i.id);
+  assert.equal(tirarBotin(todo, () => 0), null);
+  const sin = todo.filter((id) => id !== 'aura-2');
+  assert.equal(tirarBotin(sin, () => 0.2).id, 'aura-2');
+});

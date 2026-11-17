@@ -12,6 +12,7 @@ import { alternarSilencio, esSilencio, sonido } from '../services/audio.js';
 import JefeSprite from '../components/JefeSprite.jsx';
 import IconoEjercicio from '../components/IconoEjercicio.jsx';
 import GolpeOverlay from '../components/GolpeOverlay.jsx';
+import Botin from '../components/Botin.jsx';
 
 const CATS = ['Pecho y tríceps', 'Espalda y bíceps', 'Pierna', 'Hombro y core', 'Full body', 'Cardio / HIIT'];
 const SEM = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
@@ -107,7 +108,7 @@ export default function Rutina({ uid, perfil }) {
     guardar({
       ...ent, seriesHoy: n, seriesFecha: hoy, exp: (perfil.exp || 0) + exp, atributos: a,
       marcas: { [ej.id]: r2(Math.max(mejor || 0, e1rm)) }, ultimos: { [ej.id]: { peso, reps } }, jefe: { ...jefe, hp },
-      sesion: { ...plan, items: nuevos, completa },
+      sesion: { ...plan, items: nuevos, completa, stats: { dmg: (plan.stats?.dmg || 0) + dmg, ton: (plan.stats?.ton || 0) + Math.round(pesoEf * repsEq), series: (plan.stats?.series || 0) + 1, prs: (plan.stats?.prs || 0) + (critico ? 1 : 0), rescatados: [...(plan.stats?.rescatados || []), ...(rescate ? [rescate] : [])] } },
       ...(rescate ? { aldeanos: [...(perfil.aldeanos || []), rescate] } : {}),
     });
     addDoc(collection(db, 'historial_entrenos'), { uid, fecha: hoy, ejercicio: ej.nombre, categoria: ej.cat, peso: r2(pesoEf), reps: repsEq, dano: dmg, critico, tonelaje: Math.round(pesoEf * repsEq), creadoEn: serverTimestamp() }).catch(() => {});
@@ -236,6 +237,7 @@ export default function Rutina({ uid, perfil }) {
           </div>
         </div>
       )}
+      {plan?.completa && !plan.botinVisto && !anim && <Botin uid={uid} perfil={perfil} onCerrar={() => guardar({ sesion: { ...perfil.sesion, botinVisto: true } })} />}
       {anim && <GolpeOverlay anim={anim} perfil={perfil} cap={perfil.capitulo || 1} golpe={golpe} />}
     </div>
   );

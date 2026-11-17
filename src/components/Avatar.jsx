@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 
-const BASE = ['....OOOOOO....', '...OHHHHHHO...', '..OHHHHHHHHO..', '..OHHHHHHHHO..', '..OHSSSSSSHO..', '..OSSESSESSO..', '..OSSESSESSO..', '..OSSSSSSSSO..', '...OSSSSSSO...', '....OOOOOO....',
+export const BASE = ['....OOOOOO....', '...OHHHHHHO...', '..OHHHHHHHHO..', '..OHHHHHHHHO..', '..OHSSSSSSHO..', '..OSSESSESSO..', '..OSSESSESSO..', '..OSSSSSSSSO..', '...OSSSSSSO...', '....OOOOOO....',
   '...OAAAAAAO...', '..OCAaAAaACO..', '..OCAAAAAACO..', '..OSBBBBBBSO..', '...OAAAAAAO...', '...OLLOOLLO...', '...OLLO.OLLO..', '...ODDO.ODDO..'];
-const PAL = {
+export const PAL = {
   guerrero: { O: '#1B0F2A', H: '#B9BFCC', S: '#F0C08F', E: '#1B0F2A', A: '#9AA3B5', a: '#6F7890', C: '#C0392B', B: '#F2A541', L: '#5A6070', D: '#3A3F4F' },
   explorador: { O: '#1B0F2A', H: '#8A4B2A', S: '#F0C08F', E: '#1B0F2A', A: '#4FA05A', a: '#347A41', C: '#2F6B3A', B: '#8A5A2B', L: '#5B3A22', D: '#3A2414' },
   mago: { O: '#1B0F2A', H: '#3B2257', S: '#F0C08F', E: '#1B0F2A', A: '#5A3D8C', a: '#432C6B', C: '#33204F', B: '#F2A541', L: '#432C6B', D: '#2A1A44' },
@@ -10,14 +10,14 @@ const PAL = {
 // Capas del sprite: cada una se puede teñir o reemplazar por equipo
 const CAPAS = { capa: 'C', pechera: 'AaB', piernas: 'L', botas: 'D', cuerpo: 'OHSE' };
 
-function oscurecer(hex, f = 0.75) {
+export function oscurecer(hex, f = 0.75) {
   const n = parseInt(hex.slice(1), 16);
   const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f));
   return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 const celdas = (pts, fill, s) => pts.map(([x, y]) => <rect key={`${x}-${y}`} x={x * s} y={y * s} width={s} height={s} fill={fill} />);
 
-export default function Avatar({ clase = 'guerrero', tinte, tintes = {}, escala = 6, etiqueta = 'Avatar del héroe' }) {
+export default function Avatar({ clase = 'guerrero', tinte, tintes = {}, aura, escala = 6, etiqueta = 'Avatar del héroe' }) {
   const p = { ...PAL[clase] };
   const t = { pechera: tinte, ...tintes };
   if (t.pechera) { p.A = t.pechera; p.a = oscurecer(t.pechera); }
@@ -28,9 +28,16 @@ export default function Avatar({ clase = 'guerrero', tinte, tintes = {}, escala 
   const gorro = clase === 'guerrero' ? celdas([[7, 0], [8, 0], [6, 1], [7, 1], [8, 1]], '#D6403A', s)
     : clase === 'explorador' ? celdas([[6, 1], [7, 1], [7, 0]], p.H, s)
       : [...celdas([[6, 0], [7, 0], [5, 1], [6, 1], [7, 1], [8, 1], ...Array.from({ length: 6 }, (_, k) => [4 + k, 2]), ...Array.from({ length: 12 }, (_, k) => [1 + k, 3])], '#6A3FB5', s)];
+  const halo = aura ? Array.from({ length: 21 * 14 }, (_, n) => {
+    const i = n % 14, j = Math.floor(n / 14);
+    const d = Math.abs((i + 0.5 - 7) / 7) + Math.abs((j + 0.5 - 10.5) / 10.5);
+    const op = d <= 0.6 ? 0.35 : d <= 0.8 ? 0.22 : d <= 1 ? 0.12 : 0;
+    return op ? <rect key={n} x={i * s} y={j * s} width={s} height={s} fill={aura} opacity={op} /> : null;
+  }) : null;
   return (
     <svg viewBox={`0 0 ${14 * s} ${21 * s}`} width={14 * s} height={21 * s} shapeRendering="crispEdges" role="img" aria-label={etiqueta}>
       <rect x={3 * s} y={20 * s} width={8 * s} height={s / 2} fill="#000" opacity="0.35" />
+      {halo && <motion.g animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 2.4, repeat: Infinity }}>{halo}</motion.g>}
       <motion.g animate={{ y: [0, -2, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
         {Object.entries(CAPAS).map(([capa, letras]) => (
           <g key={capa} data-capa={capa}>

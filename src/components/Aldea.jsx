@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Avatar from './Avatar.jsx';
+import { aspecto } from '../data/armeria.js';
 import { momento } from '../game/oakhaven.js';
 
 const CIELO = { alba: 'linear-gradient(#ffcf7a,#b07ac0)', dia: 'linear-gradient(#6aa7e0,#bfe3f5)', noche: 'linear-gradient(#0b0818,#2a1b4a)' };
@@ -69,7 +70,7 @@ export default function Aldea({ perfil, velo }) {
             <Aldeano color={PNJ[k].color} pelo={PNJ[k].pelo} s={4} />
           </button>
         ))}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2"><Avatar clase={perfil.clase} tinte={perfil.tinte} escala={6} /></div>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2"><Avatar clase={perfil.clase} tinte={perfil.tinte} escala={6} {...aspecto(perfil)} /></div>
         {velo && <motion.div className="absolute inset-0 bg-[#9a9aa8]" initial={{ opacity: 0 }} animate={{ opacity: [0.4, 0.55, 0.4] }} transition={{ duration: 4, repeat: Infinity }} aria-hidden="true" />}
       </div>
       {velo && <p className="text-sm text-[#c9bee8]">El Velo de Ceniza cubre Oakhaven. Completa una serie para reavivar la fogata.</p>}
