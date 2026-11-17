@@ -63,3 +63,26 @@ test('el HP del jefe escala con días y capítulo', () => {
   assert.ok(b.hp > a.hp && c.hp > a.hp && a.hp === a.hpMax);
   assert.equal(jefeInfo(99).cap, 4);
 });
+
+import { valoresIniciales, armarSesion, pasoReps, SERIES } from '../src/game/sesion.js';
+const porNombre = (n) => EJERCICIOS.find((e) => e.nombre.startsWith(n));
+test('al cambiar a un ejercicio de tiempo sin historial: 30 s y pasos de 5', () => {
+  const e = porNombre('Saltos de tijera');
+  assert.deepEqual(valoresIniciales(e, {}), { peso: 0, reps: 30 });
+  assert.equal(pasoReps(e), 5);
+  assert.equal(pasoReps(porNombre('Flexiones')), 1);
+});
+test('reps por defecto: 10 con carga, 12 con peso corporal; lastre 0', () => {
+  assert.equal(valoresIniciales(porNombre('Press de banca'), {}).reps, 10);
+  assert.deepEqual(valoresIniciales(porNombre('Flexiones'), {}), { peso: 0, reps: 12 });
+});
+test('con historial carga la última marca', () => {
+  const e = porNombre('Sentadilla con barra');
+  assert.deepEqual(valoresIniciales(e, { ultimos: { [e.id]: { peso: 80, reps: 6 } } }), { peso: 80, reps: 6 });
+});
+test('la rutina del día tiene 4 a 5 ejercicios distintos', () => {
+  const lista = EJERCICIOS.filter((e) => e.cat === 'Pierna');
+  const s = armarSesion(lista);
+  assert.ok(s.length >= 4 && s.length <= 5 && new Set(s.map((i) => i.id)).size === s.length);
+  assert.equal(SERIES, 4);
+});
