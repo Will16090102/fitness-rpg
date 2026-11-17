@@ -145,3 +145,17 @@ test('Cofre: no repite piezas que ya tienes', () => {
   const sin = todo.filter((id) => id !== 'aura-2');
   assert.equal(tirarBotin(sin, () => 0.2).id, 'aura-2');
 });
+
+import { mezclar, sombrear } from '../src/game/pixel.js';
+import { rectasAvatar } from '../src/game/sprites.js';
+test('sombreado 16-bit: bordes con luz y sombra, interior liso', () => {
+  const r = sombrear(['AAA', 'AAA', 'AAA'], { A: '#808080' });
+  assert.ok(r.some((x) => x.f === mezclar('#808080', 0.3)) && r.some((x) => x.f === mezclar('#808080', -0.3)));
+  assert.ok(r.some((x) => x.x === 2 && x.y === 2 && x.w === 2 && x.f === '#808080'));
+});
+test('el avatar usa tintes y la pose de victoria levanta la espada', () => {
+  const n = rectasAvatar({ clase: 'guerrero', tintes: { pechera: '#4a6cf0' } });
+  assert.ok(n.rects.some((r) => r.capa === 'pechera' && r.f === '#4a6cf0'));
+  assert.ok(!n.rects.some((r) => r.y < 0));
+  assert.ok(rectasAvatar({ clase: 'mago', pose: 'victoria' }).rects.some((r) => r.y < 0));
+});

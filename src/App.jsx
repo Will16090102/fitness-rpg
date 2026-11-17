@@ -15,8 +15,16 @@ import Armeria from './screens/Armeria.jsx';
 const btn = 'h-12 px-4 border-4 border-black bg-gold text-space font-pixel text-[10px] shadow-[0_4px_0_#090614] active:translate-y-[3px] active:shadow-none';
 const FLAMA = ['...X....', '..XX....', '..XXX...', '.XXXX...', '.XXXXX..', 'XXXXXXX.', 'XXXXXXX.', '.XXXXX..'];
 
-const Barra = ({ label, v, color }) => (
-  <div><div className="flex justify-between text-lg"><span>{label}</span><span className="font-pixel text-[10px]">{Math.round(v)}</span></div>
+const ICONOS = {
+  fuerza: ['......XX', '.....XXX', '....XXX.', '...XXX..', 'X.XXX...', '.XXX....', '.XX.....', 'X.X.....'],
+  resistencia: ['.XX..XX.', 'XXXXXXXX', 'XXXXXXXX', 'XXXXXXXX', '.XXXXXX.', '..XXXX..', '...XX...', '........'],
+  velocidad: ['....XXX.', '...XXX..', '..XXX...', '.XXXXXX.', '...XXX..', '..XX....', '..X.....', '.X......'],
+};
+const Icono = ({ k, color }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" shapeRendering="crispEdges" fill={color} aria-hidden="true">{ICONOS[k].flatMap((f, j) => [...f].map((c, i) => (c === 'X' ? <rect key={`${i}-${j}`} x={i * 3} y={j * 3} width="3" height="3" /> : null)))}</svg>
+);
+const Barra = ({ label, v, color, icono }) => (
+  <div><div className="flex justify-between text-lg"><span className="flex items-center gap-2">{icono && <Icono k={icono} color={color} />}{label}</span><span className="font-pixel text-[10px]">{Math.round(v)}</span></div>
     <div className="h-4 border-2 border-black bg-[#3b2a66]"><div style={{ width: `${Math.min(100, v)}%`, background: color }} className="h-full" /></div></div>
 );
 
@@ -97,9 +105,9 @@ export default function App() {
           </div>
           <div className="flex flex-col gap-3">
             <Barra label="EXP" v={Math.round((lv.actual / lv.necesaria) * 100)} color="#f59e0b" />
-            <Barra label="Fuerza" v={a.fuerza ?? 0} color="#ef4444" />
-            <Barra label="Resistencia" v={a.resistencia ?? 0} color="#10b981" />
-            <Barra label="Velocidad" v={a.velocidad ?? 0} color="#3b82f6" />
+            <Barra label="Fuerza" icono="fuerza" v={a.fuerza ?? 0} color="#ef4444" />
+            <Barra label="Resistencia" icono="resistencia" v={a.resistencia ?? 0} color="#10b981" />
+            <Barra label="Velocidad" icono="velocidad" v={a.velocidad ?? 0} color="#3b82f6" />
           </div>
           <button className={btn} onClick={() => setVista('armeria')}>ARMERÍA</button>
           <button className={btn + ' bg-[#3b2a66] text-[#f8f1d8]'} onClick={run(logout)}>SALIR</button>
