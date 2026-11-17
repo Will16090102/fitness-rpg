@@ -3,6 +3,7 @@ import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase.js';
 import { CLASES } from '../game/classes.js';
 import Avatar from '../components/Avatar.jsx';
+import { hoyKey } from '../game/streak.js';
 
 const DIAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const CATS = ['Pecho y tríceps', 'Espalda y bíceps', 'Pierna', 'Hombro y core', 'Full body', 'Cardio / HIIT'];
@@ -26,7 +27,7 @@ export default function Onboarding({ uid }) {
     setDoc(doc(db, 'usuarios', uid), {
       nombre: d.nombre.trim(), clase: d.clase, tinte: d.tinte, experiencia: EXP[d.experiencia], pesoCorporal: Number(d.peso) || null,
       equipo: d.equipo, dias: diasSel, categorias: Object.fromEntries(diasSel.map((x) => [x, cat(x)])), horaAviso: d.hora,
-      nivel: 1, exp: 0, atributos: { fuerza: 5, resistencia: 5, velocidad: 5 }, racha: 0, elixires: 0, fragmentos: 0, capitulo: 1,
+      nivel: 1, exp: 0, atributos: { fuerza: 5, resistencia: 5, velocidad: 5 }, racha: 0, elixires: 0, fragmentos: 0, capitulo: 1, ultimaRevision: hoyKey(), ultimoEntreno: null, aldeanos: [],
       creadoEn: serverTimestamp(),
     }, { merge: true }).catch(() => {});
   };
