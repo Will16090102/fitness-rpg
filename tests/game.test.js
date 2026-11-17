@@ -47,7 +47,7 @@ test('Velo de Ceniza y momento del día', () => {
   assert.deepEqual([momento(7), momento(15), momento(22), momento(1)], ['alba', 'dia', 'noche', 'noche']);
 });
 
-import { EJERCICIOS } from '../src/data/ejercicios.js';
+import { EJERCICIOS, MOVIMIENTOS, disponibles, resolver, variantes } from '../src/data/ejercicios.js';
 import { nuevoJefe, jefeInfo } from '../src/game/jefes.js';
 test('la debilidad del jefe suma 15%', () => {
   const a = danoFinal({ peso: 100, reps: 5, clase: 'mago' });
@@ -81,8 +81,27 @@ test('con historial carga la última marca', () => {
   assert.deepEqual(valoresIniciales(e, { ultimos: { [e.id]: { peso: 80, reps: 6 } } }), { peso: 80, reps: 6 });
 });
 test('la rutina del día tiene 4 a 5 ejercicios distintos', () => {
-  const lista = EJERCICIOS.filter((e) => e.cat === 'Pierna');
-  const s = armarSesion(lista);
+  const s = armarSesion(MOVIMIENTOS.filter((m) => m.cat === 'Pierna'), ['mancuernas']);
   assert.ok(s.length >= 4 && s.length <= 5 && new Set(s.map((i) => i.id)).size === s.length);
   assert.equal(SERIES, 4);
+});
+
+test('catálogo ampliado: 40+ movimientos, 150+ ejercicios, ids únicos y variante sin equipo en todos', () => {
+  assert.ok(MOVIMIENTOS.length >= 40 && EJERCICIOS.length >= 150);
+  assert.equal(new Set(EJERCICIOS.map((e) => e.id)).size, EJERCICIOS.length);
+  assert.ok(MOVIMIENTOS.every((m) => m.v.peso_corporal));
+});
+test('cada ejercicio cambia según el equipo del usuario', () => {
+  const sent = MOVIMIENTOS.find((m) => m.nombre === 'Sentadilla');
+  assert.deepEqual(variantes(sent, ['mancuernas']).map((e) => e.nombre), ['Sentadilla goblet', 'Sentadilla libre']);
+  assert.deepEqual(variantes(sent, []).map((e) => e.nombre), ['Sentadilla libre']);
+  assert.equal(variantes(sent, ['gimnasio', 'multifuncional', 'mancuernas']).length, 4);
+  assert.equal(resolver({ id: sent.id, eq: 'gimnasio' }, ['mancuernas']).nombre, 'Sentadilla goblet');
+  assert.deepEqual(disponibles(['mancuernas']), ['mancuernas', 'peso_corporal']);
+});
+test('la rutina rota cada día y usa tu equipo', () => {
+  const movs = MOVIMIENTOS.filter((m) => m.cat === 'Pierna');
+  const a = armarSesion(movs, ['mancuernas'], new Date(2026, 10, 17)), b = armarSesion(movs, ['mancuernas'], new Date(2026, 10, 18));
+  assert.notEqual(a[0].id, b[0].id);
+  assert.ok(a.every((i) => ['mancuernas', 'peso_corporal'].includes(i.eq)));
 });

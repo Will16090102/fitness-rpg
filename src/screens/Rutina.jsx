@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase.js';
-import { EJERCICIOS } from '../data/ejercicios.js';
+import { EJERCICIOS, ETIQUETA, MOVIMIENTOS, disponibles, resolver, variantes } from '../data/ejercicios.js';
 import { frase, jefeInfo, nuevoJefe } from '../game/jefes.js';
 import { danoFinal } from '../game/combat.js';
 import { alRegistrarEntreno, hoyKey } from '../game/streak.js';
 import { momento } from '../game/oakhaven.js';
-import { SERIES, armarSesion, pasoReps, valoresIniciales } from '../game/sesion.js';
+import { SERIES, VERSION, armarSesion, pasoReps, valoresIniciales } from '../game/sesion.js';
 import { alternarSilencio, esSilencio, sonido } from '../services/audio.js';
 import JefeSprite from '../components/JefeSprite.jsx';
 
@@ -50,18 +50,20 @@ export default function Rutina({ uid, perfil }) {
 
   const jefe = perfil.jefe;
   const info = jefeInfo(perfil.capitulo || 1);
-  const lista = EJERCICIOS.filter((e) => e.cat === cat && (e.equipo === 'peso_corporal' || (perfil.equipo || []).includes(e.equipo)));
-  const plan = perfil.sesion?.fecha === hoy && perfil.sesion.cat === cat ? perfil.sesion : null;
+  const movsCat = MOVIMIENTOS.filter((m) => m.cat === cat);
+  const lista = EJERCICIOS.filter((e) => e.cat === cat && disponibles(perfil.equipo).includes(e.equipo));
+  const plan = perfil.sesion?.fecha === hoy && perfil.sesion.cat === cat && perfil.sesion.v === VERSION ? perfil.sesion : null;
   const items = plan?.items || [];
   const pend = items.findIndex((i) => i.hechas < SERIES);
   const actual = items.find((i) => i.id === foco) || items[pend] || items[items.length - 1];
-  const ej = actual ? EJERCICIOS.find((e) => e.id === actual.id) : null;
+  const ej = actual ? resolver(actual, perfil.equipo) : null;
+  const vars = actual ? variantes(MOVIMIENTOS.find((m) => m.id === actual.id), perfil.equipo) : [];
   const pct = jefe ? Math.round((jefe.hp / jefe.hpMax) * 100) : 100;
   const resto = fin ? Math.max(0, Math.ceil((fin - ahora) / 1000)) : 0;
   const guardar = (datos) => setDoc(doc(db, 'usuarios', uid), datos, { merge: true }).catch(() => {});
 
   useEffect(() => { if (!jefe) guardar({ jefe: nuevoJefe(perfil, perfil.capitulo || 1) }); }, [jefe]); // eslint-disable-line
-  useEffect(() => { if (!plan && lista.length) guardar({ sesion: { fecha: hoy, cat, items: armarSesion(lista), completa: false } }); }, [plan, cat, lista.length]); // eslint-disable-line
+  useEffect(() => { if (!plan && movsCat.length) guardar({ sesion: { v: VERSION, fecha: hoy, cat, items: armarSesion(movsCat, perfil.equipo), completa: false } }); }, [plan, cat, lista.length]); // eslint-disable-line
   // Al cambiar de ejercicio: carga tu última marca o los valores por defecto (30 s, 10-12 reps)
   useEffect(() => { if (ej) { const v = valoresIniciales(ej, perfil); setPeso(v.peso); setReps(v.reps); } }, [ej?.id]); // eslint-disable-line
   useEffect(() => {
@@ -129,10 +131,11 @@ export default function Rutina({ uid, perfil }) {
   };
 
   const siguiente = () => { const cap = (perfil.capitulo || 1) + 1; guardar({ capitulo: cap, jefe: nuevoJefe(perfil, cap) }); };
+  const cambiarVariante = (eq) => { sonido.click(); guardar({ sesion: { ...plan, items: items.map((i) => (i.id === actual.id ? { ...i, eq } : i)) } }); };
   const cambiar = (idViejo, nuevo) => {
     sonido.click();
-    guardar({ sesion: { ...plan, items: items.map((i) => (i.id === idViejo ? { ...i, id: nuevo.id } : i)) } });
-    if (foco === idViejo) setFoco(nuevo.id);
+    guardar({ sesion: { ...plan, items: items.map((i) => (i.id === idViejo ? { ...i, id: nuevo.mov, eq: nuevo.equipo } : i)) } });
+    if (foco === idViejo) setFoco(nuevo.mov);
     setCambiando(null);
   };
   if (!jefe) return <p>Preparando al jefe…</p>;
@@ -174,7 +177,7 @@ export default function Rutina({ uid, perfil }) {
 
         <ol className="flex flex-col gap-1" aria-label="Rutina del día">
           {items.map((i, k) => {
-            const e = EJERCICIOS.find((x) => x.id === i.id);
+            const e = resolver(i, perfil.equipo);
             const hecho = i.hechas >= SERIES;
             const activo = actual?.id === i.id;
             return (
@@ -193,8 +196,15 @@ export default function Rutina({ uid, perfil }) {
         {ej && (<>
           <button onClick={() => setCambiando(actual.id)} className="text-left border-4 border-black bg-card p-3">
             <b className="text-xl leading-tight">{ej.nombre} · Serie {Math.min(actual.hechas + 1, SERIES)}/{SERIES}</b>
-            <div className="text-sm text-[#c9bee8]">{ej.equipo.replace('_', ' ')} · {recordTxt(ej)}{info.debilidad.includes(ej.cat) ? ' · ⚡ DEBILIDAD DEL JEFE' : ''}</div>
+            <div className="text-sm text-[#c9bee8]">{ETIQUETA[ej.equipo]} · {recordTxt(ej)}{info.debilidad.includes(ej.cat) ? ' · ⚡ DEBILIDAD DEL JEFE' : ''}</div>
           </button>
+          {vars.length > 1 && (
+            <div className="flex gap-2" role="group" aria-label="Variante según tu equipo">
+              {vars.map((v) => (
+                <button key={v.equipo} onClick={() => cambiarVariante(v.equipo)} aria-pressed={v.equipo === ej.equipo} className={`flex-1 min-h-12 border-4 border-black font-pixel text-[8px] ${v.equipo === ej.equipo ? 'bg-gold text-space' : 'bg-[#3b2a66] text-[#f8f1d8]'}`}>{ETIQUETA[v.equipo]}</button>
+              ))}
+            </div>
+          )}
           <div className="flex gap-3">
             <Contador label={ej.equipo === 'peso_corporal' ? 'Lastre (kg)' : 'Peso (kg)'} valor={peso} set={setPeso} paso={2.5} min={0} />
             <Contador label={ej.tipo === 'tiempo' ? 'Segundos' : 'Reps'} valor={reps} set={setReps} paso={pasoReps(ej)} min={1} />
@@ -220,12 +230,12 @@ export default function Rutina({ uid, perfil }) {
           <div role="dialog" aria-label="Cambiar ejercicio" className="w-full max-w-[430px] mx-auto max-h-[70vh] overflow-y-auto bg-card border-t-4 border-gold p-3 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center"><b className="font-pixel text-[10px] text-gold">{cat.toUpperCase()} · {lista.length} OPCIONES</b><button className="h-12 px-3 text-[#c9bee8]" onClick={() => setCambiando(null)}>Cerrar</button></div>
             {lista.map((e) => {
-              const enPlan = items.some((i) => i.id === e.id);
-              const esActual = e.id === cambiando;
+              const enPlan = items.some((i) => i.id === e.mov && e.mov !== cambiando);
+              const esActual = e.mov === cambiando && items.find((i) => i.id === cambiando)?.eq === e.equipo;
               return (
-                <button key={e.id} disabled={enPlan && !esActual} onClick={() => (esActual ? setCambiando(null) : cambiar(cambiando, e))} className={`min-h-14 text-left border-4 px-3 py-1 ${esActual ? 'border-gold' : 'border-black'} bg-[#2a1b4a] disabled:opacity-40`}>
+                <button key={e.id} disabled={enPlan} onClick={() => (esActual ? setCambiando(null) : cambiar(cambiando, e))} className={`min-h-14 text-left border-4 px-3 py-1 ${esActual ? 'border-gold' : 'border-black'} bg-[#2a1b4a] disabled:opacity-40`}>
                   <div className="text-lg leading-tight">{e.nombre}</div>
-                  <div className="text-sm text-[#c9bee8]">{e.equipo.replace('_', ' ')} · {recordTxt(e)}{enPlan && !esActual ? ' · ya en tu rutina' : ''}</div>
+                  <div className="text-sm text-[#c9bee8]">{e.movNombre} · {ETIQUETA[e.equipo]} · {recordTxt(e)}{enPlan ? ' · ya en tu rutina' : ''}</div>
                 </button>
               );
             })}
