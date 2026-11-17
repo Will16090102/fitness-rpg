@@ -9,6 +9,8 @@ import { BONO_TEXTO, momento } from './game/oakhaven.js';
 import Aldea from './components/Aldea.jsx';
 import NavBar from './components/NavBar.jsx';
 import Onboarding from './screens/Onboarding.jsx';
+import { CajaIcono, Pix, Placa } from './components/Marco.jsx';
+import { mezclar } from './game/pixel.js';
 import Rutina from './screens/Rutina.jsx';
 import Armeria from './screens/Armeria.jsx';
 
@@ -24,8 +26,13 @@ const Icono = ({ k, color }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" shapeRendering="crispEdges" fill={color} aria-hidden="true">{ICONOS[k].flatMap((f, j) => [...f].map((c, i) => (c === 'X' ? <rect key={`${i}-${j}`} x={i * 3} y={j * 3} width="3" height="3" /> : null)))}</svg>
 );
 const Barra = ({ label, v, color, icono }) => (
-  <div><div className="flex justify-between text-lg"><span className="flex items-center gap-2">{icono && <Icono k={icono} color={color} />}{label}</span><span className="font-pixel text-[10px]">{Math.round(v)}</span></div>
-    <div className="h-4 border-2 border-black bg-[#3b2a66]"><div style={{ width: `${Math.min(100, v)}%`, background: color }} className="h-full" /></div></div>
+  <div className="flex items-center gap-2">
+    {icono ? <CajaIcono><Pix mapa={ICONOS[icono]} pal={{ X: color }} s={3} /></CajaIcono> : <div className="w-10 shrink-0" />}
+    <div className="flex-1">
+      <div className="flex justify-between text-lg leading-tight"><span>{label}</span><span className="font-pixel text-[10px] self-center">{Math.round(v)}</span></div>
+      <div className="h-4 border-[3px] border-[#090614] bg-[#1a1438]"><div className="h-full" style={{ width: `${Math.min(100, v)}%`, background: `linear-gradient(${mezclar(color, 0.35)}, ${color} 55%, ${mezclar(color, -0.3)})` }} /></div>
+    </div>
+  </div>
 );
 
 function Llama({ racha }) {
@@ -90,6 +97,7 @@ export default function App() {
   return (
     <div className="pb-20">
       <main className="mx-auto max-w-[430px] min-h-screen p-5 flex flex-col gap-4">
+        {tab === 'avatar' && vista !== 'armeria' && <div className="text-center"><Placa>AVATAR</Placa></div>}
         <div className="flex items-center justify-between">
           <b className="font-pixel text-gold text-sm">NV. {lv.nivel}</b>
           <span className="text-[#c9bee8]">{perfil.nombre}</span>
